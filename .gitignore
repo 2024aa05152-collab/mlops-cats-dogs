@@ -1,0 +1,10 @@
+# MLflow
+mlruns/
+
+# Models
+models/
+*.h5
+*.keras
+
+# Large artifacts
+artifacts/

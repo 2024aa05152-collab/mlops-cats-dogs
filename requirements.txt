@@ -1,0 +1,10 @@
+tensorflow
+fastapi
+uvicorn
+numpy
+pillow
+mlflow
+dvc
+kagglehub
+kaggle
+python-multipart
