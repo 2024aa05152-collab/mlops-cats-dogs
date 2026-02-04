@@ -8,3 +8,38 @@ models/
 
 # Large artifacts
 artifacts/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.egg-info/
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data & artifacts
+data/raw/
+data/processed/
+artifacts/
+models/
+
+# MLflow
+mlruns/
+mlflow.db
+
+# Environment files
+.env
+kaggle.json
+
+# Jupyter
+.ipynb_checkpoints/
