@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cats-dogs-model-group85
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cats-dogs-model-group85
+  template:
+    metadata:
+      labels:
+        app: cats-dogs-model-group85
+    spec:
+      containers:
+      - name: 
+        image: 
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "128Mi"
+          limits:
+            cpu: "2000m"
+            memory: "256Mi"
+        env:
+        # DagsHub / MLflow Configuration
+        - name: MLFLOW_TRACKING_URI
+          valueFrom:
+            secretKeyRef:
+              name: dagshub-secrets
+              key: MLFLOW_TRACKING_URI
+        - name: DAGSHUB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: dagshub-secrets
+              key: DAGSHUB_USERNAME
+        - name: DAGSHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: dagshub-secrets
+              key: DAGSHUB_TOKEN
+        # Application Settings
+        - name: MODEL_NAME
+          value: 
+        - name: MODEL_STAGE
+          value: 

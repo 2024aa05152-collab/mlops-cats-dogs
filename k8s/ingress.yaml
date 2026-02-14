@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cats-dogs-model-group85-ingress
+spec:
+  rules:
+  - host: cats-dogs-model-group85.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: cats-dogs-model-group85
+            port:
+              number: 80
