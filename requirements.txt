@@ -8,3 +8,5 @@ dvc
 kagglehub
 kaggle
 python-multipart
+prometheus-client
+loguru
