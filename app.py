@@ -6,6 +6,7 @@ from PIL import Image
 import io
 import uuid
 import time
+import os
 
 from src.monitoring import (
     log_request,
@@ -19,6 +20,10 @@ from src.monitoring import (
 
 app = FastAPI()
 model = tf.keras.models.load_model("models/model.h5")
+
+# Image storage directory
+IMAGES_DIR = "images"
+os.makedirs(IMAGES_DIR, exist_ok=True)
 
 
 @app.get("/health")
@@ -54,8 +59,19 @@ async def predict(request: Request, file: UploadFile = File(...)):
         metadata={"filename": file.filename}
     )
     
+    # Read image bytes
+    image_bytes = await file.read()
+    
+    # Save image to images folder
+    timestamp = int(time.time() * 1000)
+    unique_id = str(uuid.uuid4())[:8]
+    image_filename = f"{timestamp}_{unique_id}_{file.filename}"
+    image_path = os.path.join(IMAGES_DIR, image_filename)
+    with open(image_path, "wb") as f:
+        f.write(image_bytes)
+    
     # Process image
-    image = Image.open(io.BytesIO(await file.read())).convert("RGB")
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     image = image.resize((224, 224))
     img_array = np.array(image) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
@@ -110,8 +126,19 @@ async def predict_with_label(request: Request, file: UploadFile = File(...), tru
         metadata={"filename": file.filename, "true_label": true_label}
     )
     
+    # Read image bytes
+    image_bytes = await file.read()
+    
+    # Save image to images folder
+    timestamp = int(time.time() * 1000)
+    unique_id = str(uuid.uuid4())[:8]
+    image_filename = f"{timestamp}_{unique_id}_{file.filename}"
+    image_path = os.path.join(IMAGES_DIR, image_filename)
+    with open(image_path, "wb") as f:
+        f.write(image_bytes)
+    
     # Process image
-    image = Image.open(io.BytesIO(await file.read())).convert("RGB")
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     image = image.resize((224, 224))
     img_array = np.array(image) / 255.0
     img_array = np.expand_dims(img_array, axis=0)

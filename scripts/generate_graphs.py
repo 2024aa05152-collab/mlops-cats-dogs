@@ -14,8 +14,8 @@ plt.style.use('seaborn-v0_8-whitegrid')
 plt.rcParams['figure.figsize'] = (10, 6)
 plt.rcParams['font.size'] = 12
 
-# Output directory
-OUTPUT_DIR = "presentation_graphs"
+# Output directory - save to images folder
+OUTPUT_DIR = "images"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Sample data (in production, fetch from API)
