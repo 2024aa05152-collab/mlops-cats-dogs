@@ -29,7 +29,7 @@ jobs:
         pip install dvc dvc-s3 dagshub mlflow flake8 black pytest pytest-cov
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-    # 4. Lint
+    # 4. Lint code
     - name: Lint code (Flake8)
       run: |
         flake8 src app tests --count --select=E9,F63,F7,F82 --show-source --statistics
@@ -66,7 +66,7 @@ jobs:
       run: |
         python src/train.py
 
-    # 8. Docker build and push
+    # 8. Docker build and push ((Continuous Deployment))
     - name: Login to Docker Hub
       if: github.event_name != 'pull_request'
       uses: docker/login-action@v2
@@ -82,15 +82,10 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/mlops-cats-dogs:latest
 
-    # 9. Deploy to Kubernetes
-    - name: Deploy to Minikube
-      if: github.event_name != 'pull_request'
-      run: |
-        kubectl apply -f k8s/
-        kubectl rollout restart deployment cats-dogs-model-group85
-        kubectl rollout status deployment cats-dogs-model-group85
-
-    # 10. Smoke tests
-    - name: Smoke tests
-      if: github.event_name != 'pull_request'
-      run: bash scripts/smoke_test.sh
+    # 9. Log to GitHub Artifactory
+    - name: Upload logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: logs
+        path: logs/

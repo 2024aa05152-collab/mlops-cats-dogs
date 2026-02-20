@@ -13,7 +13,7 @@ echo "Waiting for rollout..."
 sleep 15
 
 echo "Encoding image..."
-IMAGE_BASE64=$(base64 -w 0 $IMAGE_PATH)
+IMAGE_BASE64=$(base64 "$IMAGE_PATH" | tr -d '\n')
 
 echo "Running health check..."
 curl -f $SERVICE_URL/health
