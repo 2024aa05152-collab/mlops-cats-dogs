@@ -7,6 +7,7 @@ import io
 import uuid
 import time
 import os
+import mlflow.keras
 
 from src.monitoring import (
     log_request,
@@ -19,7 +20,30 @@ from src.monitoring import (
 )
 
 app = FastAPI()
-model = tf.keras.models.load_model("models/model.h5")
+
+# --------------------------------------------------
+# Dynamic Model Loading from MLFlow DagsHub Registry
+# --------------------------------------------------
+model = None
+model_source = "None"
+
+try:
+    print("Attempting to load CatsDogs_CNN from MLFlow DagsHub Registry...")
+    # Pull the latest model registered in MLFlow DagsHub
+    model_uri = "models:/CatsDogs_CNN/None"
+    model = mlflow.keras.load_model(model_uri)
+    model_source = "MLFlow DagsHub Registry"
+    print(f"Successfully loaded model from {model_uri}")
+except Exception as e:
+    print(f"Failed to load model from registry: {str(e)}")
+    # Fallback to local model if registry is unreachable
+    try:
+        model = tf.keras.models.load_model("models/model.h5")
+        model_source = "Local Fallback"
+        print("Fallback: Loaded local model.h5")
+    except Exception as local_e:
+        print(f"Critical Error: Could not load any model. {str(local_e)}")
+# --------------------------------------------------
 
 # Image storage directory
 IMAGES_DIR = "images"
@@ -28,7 +52,11 @@ os.makedirs(IMAGES_DIR, exist_ok=True)
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "model_loaded": model is not None,
+        "model_source": model_source
+    }
 
 
 @app.get("/metrics")
@@ -179,4 +207,3 @@ async def predict_with_label(request: Request, file: UploadFile = File(...), tru
         "true_label": true_label,
         "correct": label == true_label if true_label else None
     }
-
