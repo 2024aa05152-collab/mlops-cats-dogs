@@ -13,8 +13,8 @@ spec:
         app: cats-dogs-model-group85
     spec:
       containers:
-      - name: 
-        image: 
+      - name: cats-dogs-prediction-api
+        image: bashyan/mlops-cats-dogs:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
@@ -42,8 +42,3 @@ spec:
             secretKeyRef:
               name: dagshub-secrets
               key: DAGSHUB_TOKEN
-        # Application Settings
-        - name: MODEL_NAME
-          value: 
-        - name: MODEL_STAGE
-          value: 
