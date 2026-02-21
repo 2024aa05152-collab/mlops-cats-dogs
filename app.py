@@ -1,27 +1,204 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Request
+from fastapi.responses import Response
 import tensorflow as tf
 import numpy as np
 from PIL import Image
 import io
+import uuid
+import time
+import os
+import mlflow.keras
+
+from src.monitoring import (
+    log_request,
+    log_response,
+    track_prediction,
+    get_metrics,
+    get_prediction_stats,
+    RequestTimer,
+    REQUEST_COUNT
+)
 
 app = FastAPI()
-model = tf.keras.models.load_model("models/model.h5")
+
+# --------------------------------------------------
+# Dynamic Model Loading from MLFlow DagsHub Registry
+# --------------------------------------------------
+model = None
+model_source = "None"
+
+try:
+    print("Attempting to load CatsDogs_CNN from MLFlow DagsHub Registry...")
+    # Pull the latest model registered in MLFlow DagsHub
+    model_uri = "models:/CatsDogs_CNN/None"
+    model = mlflow.keras.load_model(model_uri)
+    model_source = "MLFlow DagsHub Registry"
+    print(f"Successfully loaded model from {model_uri}")
+except Exception as e:
+    print(f"Failed to load model from registry: {str(e)}")
+    # Fallback to local model if registry is unreachable
+    try:
+        model = tf.keras.models.load_model("models/model.h5")
+        model_source = "Local Fallback"
+        print("Fallback: Loaded local model.h5")
+    except Exception as local_e:
+        print(f"Critical Error: Could not load any model. {str(local_e)}")
+# --------------------------------------------------
+
+# Image storage directory
+IMAGES_DIR = "images"
+os.makedirs(IMAGES_DIR, exist_ok=True)
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "model_loaded": model is not None,
+        "model_source": model_source
+    }
+
+@app.get("/metrics")
+def metrics():
+    """Expose Prometheus metrics."""
+    return Response(
+        content=get_metrics(),
+        media_type="text/plain"
+    )
+
+@app.get("/stats")
+def stats():
+    """Get prediction statistics."""
+    return get_prediction_stats()
 
 @app.post("/predict")
-async def predict(file: UploadFile = File(...)):
-    image = Image.open(io.BytesIO(await file.read())).convert("RGB")
+async def predict(request: Request, file: UploadFile = File(...)):
+    """Predict endpoint with monitoring and logging."""
+    request_id = str(uuid.uuid4())
+    start_time = time.time()
+    
+    # Log incoming request (excluding sensitive data)
+    log_request(
+        endpoint="/predict",
+        request_id=request_id,
+        metadata={"filename": file.filename}
+    )
+    
+    # Read image bytes
+    image_bytes = await file.read()
+    
+    # Save image to images folder
+    timestamp = int(time.time() * 1000)
+    unique_id = str(uuid.uuid4())[:8]
+    image_filename = f"{timestamp}_{unique_id}_{file.filename}"
+    image_path = os.path.join(IMAGES_DIR, image_filename)
+    with open(image_path, "wb") as f:
+        f.write(image_bytes)
+    
+    # Process image
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     image = image.resize((224, 224))
     img_array = np.array(image) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
-
-    prediction = model.predict(img_array)[0][0]
+    
+    # Make prediction with timing
+    with RequestTimer():
+        prediction = model.predict(img_array)[0][0]
+    
     label = "dog" if prediction > 0.5 else "cat"
-
+    latency = time.time() - start_time
+    
+    # Track prediction
+    track_prediction(
+        request_id=request_id,
+        prediction=prediction,
+        label=label,
+        latency=latency
+    )
+    
+    # Update request count
+    REQUEST_COUNT.labels(endpoint="/predict", label=label).inc()
+    
+    # Log response (excluding sensitive data)
+    log_response(
+        endpoint="/predict",
+        request_id=request_id,
+        status_code=200,
+        label=label,
+        confidence=float(prediction),
+        latency=latency
+    )
+    
     return {
         "label": label,
         "confidence": float(prediction)
+    }
+
+@app.post("/predict_with_label")
+async def predict_with_label(request: Request, file: UploadFile = File(...), true_label: str = None):
+    """
+    Predict endpoint that accepts true label for performance tracking.
+    Use this for collecting ground truth data.
+    """
+    request_id = str(uuid.uuid4())
+    start_time = time.time()
+    
+    # Log incoming request
+    log_request(
+        endpoint="/predict_with_label",
+        request_id=request_id,
+        metadata={"filename": file.filename, "true_label": true_label}
+    )
+    
+    # Read image bytes
+    image_bytes = await file.read()
+    
+    # Save image to images folder
+    timestamp = int(time.time() * 1000)
+    unique_id = str(uuid.uuid4())[:8]
+    image_filename = f"{timestamp}_{unique_id}_{file.filename}"
+    image_path = os.path.join(IMAGES_DIR, image_filename)
+    with open(image_path, "wb") as f:
+        f.write(image_bytes)
+    
+    # Process image
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    image = image.resize((224, 224))
+    img_array = np.array(image) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
+    
+    # Make prediction
+    with RequestTimer():
+        prediction = model.predict(img_array)[0][0]
+    
+    label = "dog" if prediction > 0.5 else "cat"
+    latency = time.time() - start_time
+    
+    # Track prediction with true label
+    track_prediction(
+        request_id=request_id,
+        prediction=prediction,
+        label=label,
+        true_label=true_label,
+        latency=latency
+    )
+    
+    # Update request count
+    REQUEST_COUNT.labels(endpoint="/predict_with_label", label=label).inc()
+    
+    # Log response
+    log_response(
+        endpoint="/predict_with_label",
+        request_id=request_id,
+        status_code=200,
+        label=label,
+        confidence=float(prediction),
+        latency=latency,
+        metadata={"true_label": true_label}
+    )
+    
+    return {
+        "label": label,
+        "confidence": float(prediction),
+        "true_label": true_label,
+        "correct": label == true_label if true_label else None
     }
