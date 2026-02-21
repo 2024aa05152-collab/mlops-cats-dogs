@@ -2,25 +2,31 @@
 set -e
 
 MINIKUBE_IP=$(minikube ip)
-SERVICE_URL="http://$MINIKUBE_IP:30007"
+HOST="cats-dogs-model-group85.local"
+BASE_URL="http://$MINIKUBE_IP"
 
 IMAGE_PATH="data/processed/test/cats/83.jpg"
 
-echo "Checking $SERVICE_URL"
+echo "Ingress host: $HOST"
+echo "Minikube IP: $MINIKUBE_IP"
 echo "Using test image: $IMAGE_PATH"
 
 echo "Waiting for rollout..."
 sleep 15
 
-echo "Encoding image..."
-IMAGE_BASE64=$(base64 "$IMAGE_PATH" | tr -d '\n')
-
 echo "Running health check..."
-curl -f $SERVICE_URL/health
+curl -f $BASE_URL/health \
+  -H "Host: $HOST"
 
 echo "Running prediction test..."
-curl -f -X POST $SERVICE_URL/predict \
-  -H "Content-Type: application/json" \
-  -d "{\"image\":\"$IMAGE_BASE64\"}"
+curl -f -X POST $BASE_URL/predict \
+  -H "Host: $HOST" \
+  -F "file=@$IMAGE_PATH"
+
+echo "Running prediction with label test..."
+curl -f -X POST $BASE_URL/predict_with_label \
+  -H "Host: $HOST" \
+  -F "file=@$IMAGE_PATH" \
+  -F "true_label=cat"
 
 echo "Smoke tests passed!"
