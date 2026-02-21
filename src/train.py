@@ -200,7 +200,11 @@ def main():
         model.save(model_path)
         logger.info(f"💾 Model saved locally to {model_path}")
         
-        mlflow.keras.log_model(model, artifact_path="model")
+        mlflow.keras.log_model(
+            model, 
+            artifact_path="model",
+            registered_model_name="CatsDogs_CNN" # This pushes it directly to the DagsHub Registry
+        )
         logger.info("✅ Training complete. All artifacts and models successfully logged to MLflow.")
 
 if __name__ == "__main__":
