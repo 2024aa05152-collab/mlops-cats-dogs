@@ -49,6 +49,7 @@ except Exception as e:
 IMAGES_DIR = "images"
 os.makedirs(IMAGES_DIR, exist_ok=True)
 
+
 @app.get("/health")
 def health():
     return {
@@ -56,6 +57,7 @@ def health():
         "model_loaded": model is not None,
         "model_source": model_source
     }
+
 
 @app.get("/metrics")
 def metrics():
@@ -65,10 +67,12 @@ def metrics():
         media_type="text/plain"
     )
 
+
 @app.get("/stats")
 def stats():
     """Get prediction statistics."""
     return get_prediction_stats()
+
 
 @app.post("/predict")
 async def predict(request: Request, file: UploadFile = File(...)):
@@ -132,6 +136,7 @@ async def predict(request: Request, file: UploadFile = File(...)):
         "label": label,
         "confidence": float(prediction)
     }
+
 
 @app.post("/predict_with_label")
 async def predict_with_label(request: Request, file: UploadFile = File(...), true_label: str = None):
