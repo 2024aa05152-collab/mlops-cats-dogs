@@ -1,5 +1,19 @@
 # 🐱🐶 Cats vs Dogs Classifier – End-to-End MLOps Pipeline
 
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-Classifier-F7931E)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)
+![Keras](https://img.shields.io/badge/-Keras-D00000?style=flat-square&logo=Keras&logoColor=white)
+![Kaggle](https://img.shields.io/badge/Kaggle-035a7d?style=flat&logo=kaggle&logoColor=white)
+![DVC](https://img.shields.io/badge/DVC-Data%20Versioning-purple)
+![DagsHub](https://img.shields.io/badge/DagsHub-Data%20%26%20Model%20Hub-%231F4C55)
+
+![Docker](https://img.shields.io/badge/Docker-Containerized-blue)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-green)
+
+![MLflow](https://img.shields.io/badge/MLflow-Tracking%20%26%20Registry-blue)
+![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-orange)
+
 ## 📌 Project Overview
 
 This project implements a **production-grade MLOps pipeline** for **Cats 🐱 vs Dogs 🐶 binary image classification**. It covers the complete ML lifecycle: data versioning, CNN training, experiment tracking, containerization, Kubernetes deployment, CI/CD automation, and real-time monitoring.
@@ -235,4 +249,5 @@ python scripts/smoke_test.py  # Health + predict calls
 **Confusion Matrix** & **ROC Curves**: `scripts/performance_graphs/`
 
 ***
+
 
