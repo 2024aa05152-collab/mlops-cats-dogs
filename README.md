@@ -2,7 +2,7 @@
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-Classifier-F7931E)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=flat-square&logo=TensorFlow&logoColor=white)
 ![Keras](https://img.shields.io/badge/-Keras-D00000?style=flat-square&logo=Keras&logoColor=white)
 ![Kaggle](https://img.shields.io/badge/Kaggle-035a7d?style=flat&logo=kaggle&logoColor=white)
 ![DVC](https://img.shields.io/badge/DVC-Data%20Versioning-purple)
@@ -249,5 +249,6 @@ python scripts/smoke_test.py  # Health + predict calls
 **Confusion Matrix** & **ROC Curves**: `scripts/performance_graphs/`
 
 ***
+
 
 
