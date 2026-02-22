@@ -57,16 +57,16 @@ graph TD
 ### 4. **Operations & Monitoring**
 - **Custom Metrics**: `/metrics`, `/stats`, prediction tracker
 - **Prometheus Scraping**: Requests, latency, accuracy
-- **Live Dashboard**: HTML + Grafana-ready
+- **Live Dashboard**: HTML
 
 ## 🎯 Problem Statement
 
 **Pet adoption platform** needs **CNN image classifier** for Cats 🐱 vs Dogs 🐶.
 
-**Dataset**: [Kaggle Cats and Dogs](https://www.kaggle.com/datasets/salader/dogs-vs-cats)
+**Dataset**: [Kaggle Cats and Dogs](https://www.kaggle.com/datasets/bhavikjikadara/dog-and-cat-classification-dataset)
 - **Preprocess**: 224x224 RGB + augmentation
 - **Split**: 80/10/10 train/val/test
-- **Target**: Binary classification [ppl-ai-file-upload.s3.amazonaws](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/71623839/f1ef06d6-d11d-485d-8eaa-f9abf65419fd/MLOPS_Assignment2.pdf)
+- **Target**: Binary classification
 
 ***
 
@@ -164,7 +164,7 @@ python src/train.py  # Logs to DagsHub
 
 ### **Option A: Docker Compose (Full Stack)**
 ```bash
-docker-compose up -d  # App + Prometheus + Grafana
+docker-compose up -d  # App + Prometheus
 curl -X POST -F "file=@cat.jpg" http://localhost:8000/predict
 ```
 
@@ -210,12 +210,10 @@ python scripts/smoke_test.py  # Health + predict calls
 - `prediction_latency_seconds`
 - `active_requests`
 
-**Dashboard**: `monitoring_dashboard.html` → Auto-refreshes every 5s
+**Dashboard**: `index.html` → Auto-refreshes every 5s
 - Accuracy gauge
 - Cat/Dog pie chart
 - Latency heatmap (green<200ms)
-
-**Grafana Ready**: Import dashboard ID 19268.
 
 ***
 
@@ -249,6 +247,7 @@ python scripts/smoke_test.py  # Health + predict calls
 **Confusion Matrix** & **ROC Curves**: `scripts/performance_graphs/`
 
 ***
+
 
 
 
