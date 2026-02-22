@@ -1,5 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, Request
 from fastapi.responses import Response
+from fastapi.responses import HTMLResponse
 import tensorflow as tf
 import numpy as np
 from PIL import Image
@@ -58,6 +59,20 @@ def health():
         "model_source": model_source
     }
 
+@app.get("/", response_class=HTMLResponse)
+async def read_dashboard():
+    """Serves the monitoring dashboard HTML file."""
+    try:
+        with open("index.html", "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        return """
+        <html>
+            <body>
+                <h1>Dashboard File Not Found</h1>
+            </body>
+        </html>
+        """
 
 @app.get("/metrics")
 def metrics():
