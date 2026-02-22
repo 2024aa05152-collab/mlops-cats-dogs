@@ -53,8 +53,7 @@ MODEL_PREDICTIONS = Counter(
     ['predicted_label']
 )
 
-# In-memory storage for prediction tracking (for batch analysis)
-# In production, this would be sent to a database or external system
+# In-memory storage for prediction tracking
 class PredictionTracker:
     """Tracks predictions for post-deployment performance analysis."""
     
@@ -225,6 +224,11 @@ def get_prediction_stats() -> Dict[str, Any]:
     for p in predictions:
         label_counts[p["predicted_label"]] += 1
     stats["label_distribution"] = dict(label_counts)
+    
+    # Grab the last 20 predictions for the graphs
+    recent_preds = predictions[-20:]
+    stats["recent_confidences"] = [p["prediction"] for p in recent_preds]
+    stats["recent_latencies"] = [round(p["latency_seconds"], 3) for p in recent_preds if p["latency_seconds"] is not None]
     
     return stats
 

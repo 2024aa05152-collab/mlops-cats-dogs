@@ -1,0 +1,308 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Monitoring Dashboard - Cats vs Dogs</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                min-height: 100vh;
+                padding: 20px;
+            }
+            .container { max-width: 1200px; margin: 0 auto; }
+            h1 { 
+                color: white; 
+                text-align: center; 
+                margin-bottom: 10px;
+                font-size: 2.5em;
+            }
+            .subtitle { 
+                color: #a0c4ff; 
+                text-align: center; 
+                margin-bottom: 30px;
+                font-size: 1.2em;
+            }
+            .stats-row { 
+                display: grid; 
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+                gap: 20px; 
+                margin-bottom: 30px;
+            }
+            .stat-card { 
+                background: white; 
+                border-radius: 15px; 
+                padding: 25px; 
+                text-align: center;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                transition: transform 0.3s;
+            }
+            .stat-card:hover { transform: translateY(-5px); }
+            .stat-value { 
+                font-size: 3em; 
+                font-weight: bold; 
+                color: #2a5298;
+            }
+            .stat-label { 
+                color: #666; 
+                margin-top: 5px;
+                font-size: 1.1em;
+            }
+            .charts-grid { 
+                display: grid; 
+                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
+                gap: 20px;
+            }
+            .chart-card { 
+                background: white; 
+                border-radius: 15px; 
+                padding: 20px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            }
+            .chart-title {
+                color: #1e3c72;
+                margin-bottom: 15px;
+                font-size: 1.3em;
+                text-align: center;
+            }
+            .timestamp {
+                text-align: center;
+                color: #a0c4ff;
+                margin-top: 20px;
+                font-size: 0.9em;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🐱🐶 Monitoring Dashboard</h1>
+            <p class="subtitle">Cats vs Dogs Classification Model - Real-time Metrics</p>
+            
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalPredictions">0</div>
+                    <div class="stat-label">Total Predictions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="labeledPredictions">0</div>
+                    <div class="stat-label">With True Labels</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="accuracy">0%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="requestCount">0</div>
+                    <div class="stat-label">Total Requests</div>
+                </div>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">📊 Label Distribution</h3>
+                    <canvas id="labelChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">📈 Request Metrics</h3>
+                    <canvas id="requestChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">🎯 Prediction Confidence</h3>
+                    <canvas id="confidenceChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">⏱️ Latency Distribution</h3>
+                    <canvas id="latencyChart"></canvas>
+                </div>
+            </div>
+            
+            <p class="timestamp" id="lastUpdate">Waiting for data...</p>
+        </div>
+
+        <script>
+            // Chart instances
+            let labelChart, requestChart, confidenceChart, latencyChart;
+            
+            function initCharts() {
+                // Label Distribution Chart (Starts empty)
+                labelChart = new Chart(document.getElementById('labelChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Cat', 'Dog'],
+                        datasets: [{
+                            data: [0, 0],
+                            backgroundColor: ['#FF6B6B', '#4ECDC4'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+                
+                // Request Metrics Chart (Starts empty)
+                requestChart = new Chart(document.getElementById('requestChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['/predict', '/predict_with_label'],
+                        datasets: [{
+                            label: 'Requests',
+                            data: [0, 0],
+                            backgroundColor: ['#667eea', '#764ba2']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+                
+                // Confidence Distribution (Starts empty)
+                confidenceChart = new Chart(document.getElementById('confidenceChart'), {
+                    type: 'line',
+                    data: {
+                        labels: [], // Will populate dynamically if backend supports it
+                        datasets: [{
+                            label: 'Confidence',
+                            data: [],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: { 
+                            y: { 
+                                beginAtZero: true, 
+                                max: 1,
+                                title: { display: true, text: 'Confidence' }
+                            } 
+                        }
+                    }
+                });
+                
+                // Latency Distribution (Starts empty)
+                latencyChart = new Chart(document.getElementById('latencyChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: [], 
+                        datasets: [{
+                            label: 'Latency (s)',
+                            data: [],
+                            backgroundColor: '#4ECDC4'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: { 
+                            y: { 
+                                beginAtZero: true,
+                                title: { display: true, text: 'Seconds' }
+                            } 
+                        }
+                    }
+                });
+            }
+            
+            async function fetchStats() {
+                try {
+                    const response = await fetch('/stats');
+                    if (!response.ok) return;
+                    const stats = await response.json();
+                    
+                    // Update Top Cards
+                    document.getElementById('totalPredictions').textContent = stats.total_predictions || 0;
+                    document.getElementById('labeledPredictions').textContent = stats.labeled_predictions || 0;
+                    document.getElementById('accuracy').textContent = stats.accuracy ? (stats.accuracy * 100).toFixed(0) + '%' : 'N/A';
+                    
+                    // Update Label Distribution Chart
+                    const dist = stats.label_distribution || {};
+                    if (labelChart && (dist.cat || dist.dog)) {
+                        labelChart.data.datasets[0].data = [dist.cat || 0, dist.dog || 0];
+                        labelChart.update();
+                    }
+
+                    // --- THIS READS THE NEW DATA FOR CONFIDENCE ---
+                    if (confidenceChart && stats.recent_confidences && stats.recent_confidences.length > 0) {
+                        confidenceChart.data.labels = stats.recent_confidences.map((_, i) => `Req ${i+1}`);
+                        confidenceChart.data.datasets[0].data = stats.recent_confidences;
+                        confidenceChart.update();
+                    }
+
+                    // --- THIS READS THE NEW DATA FOR LATENCY ---
+                    if (latencyChart && stats.recent_latencies && stats.recent_latencies.length > 0) {
+                        latencyChart.data.labels = stats.recent_latencies.map((_, i) => `Req ${i+1}`);
+                        latencyChart.data.datasets[0].data = stats.recent_latencies;
+                        
+                        // Colors: Green < 0.2s, Yellow < 0.5s, Red > 0.5s
+                        latencyChart.data.datasets[0].backgroundColor = stats.recent_latencies.map(
+                            l => l < 0.2 ? '#4ECDC4' : l < 0.5 ? '#FFE66D' : '#FF6B6B'
+                        );
+                        latencyChart.update();
+                    }
+                    
+                    document.getElementById('lastUpdate').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+                } catch (e) {
+                    console.error('Error fetching stats:', e);
+                }
+            }
+            
+            async function fetchMetrics() {
+                try {
+                    const response = await fetch('/metrics');
+                    if (!response.ok) return;
+                    const text = await response.text();
+                    
+                    // Properly parse Prometheus metric text to sum ALL requests
+                    let totalReqs = 0;
+                    let predictReqs = 0;
+                    let predictWithLabelReqs = 0;
+
+                    const lines = text.split('\n');
+                    lines.forEach(line => {
+                        if (line.startsWith('inference_requests_total{')) {
+                            // Extract the number at the end of the line
+                            const value = parseFloat(line.split(' ').pop());
+                            totalReqs += value;
+                            
+                            // Categorize based on endpoint label
+                            if (line.includes('endpoint="/predict"')) predictReqs += value;
+                            if (line.includes('endpoint="/predict_with_label"')) predictWithLabelReqs += value;
+                        }
+                    });
+
+                    document.getElementById('requestCount').textContent = totalReqs;
+                    
+                    // Update Request Chart
+                    if (requestChart) {
+                        requestChart.data.datasets[0].data = [predictReqs, predictWithLabelReqs];
+                        requestChart.update();
+                    }
+
+                } catch (e) {
+                    console.error('Error fetching metrics:', e);
+                }
+            }
+            
+            // Initialize
+            initCharts();
+            fetchStats();
+            fetchMetrics();
+            
+            // Auto-refresh every 5 seconds
+            setInterval(() => {
+                fetchStats();
+                fetchMetrics();
+            }, 5000);
+        </script>
+    </body>
+    </html>

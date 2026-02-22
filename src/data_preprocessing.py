@@ -54,11 +54,19 @@ def prepare_dirs():
         for cls in CLASS_MAP.values():
             os.makedirs(os.path.join(PROCESSED_DIR, split, cls), exist_ok=True)
 
-def resize_and_save(src, dst):
+def resize_and_save(src, dst, augment=False):
     try:
         img = Image.open(src).convert("RGB")
         img = img.resize((IMG_SIZE, IMG_SIZE))
         img.save(dst)
+        
+        # Apply augmentation only if flag is True (i.e., for the training set)
+        if augment:
+            img_flipped = img.transpose(Image.FLIP_LEFT_RIGHT)
+            base, ext = os.path.splitext(dst)
+            aug_dst = f"{base}_aug{ext}"
+            img_flipped.save(aug_dst)
+            
     except Exception:
         pass  # Skip corrupted images (important for PetImages dataset)
 
@@ -88,9 +96,12 @@ def preprocess():
             for f in files:
                 src = os.path.join(cls_dir, f)
                 dst = os.path.join(PROCESSED_DIR, split, cls, f)
-                resize_and_save(src, dst)
+                
+                # Pass augment=True only if the split is 'train'
+                is_train_split = (split == "train")
+                resize_and_save(src, dst, augment=is_train_split)
 
-            print(f"{cls} -> {split}: {len(files)} images")
+            print(f"{cls} -> {split}: {len(files)} images (plus augmentations if train)")
 
 if __name__ == "__main__":
     if not os.path.exists(os.path.join(RAW_DIR, "cats")) or \

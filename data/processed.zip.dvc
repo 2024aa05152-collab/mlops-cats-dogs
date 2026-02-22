@@ -1,0 +1,5 @@
+outs:
+- md5: 4ea14172986b418ebab7809867f3acd4
+  size: 425258558
+  hash: md5
+  path: processed.zip
