@@ -30,10 +30,12 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     # 4. Lint code
-    # - name: Lint code (Flake8)
-    #   run: |
-    #     flake8 src app tests --count --select=E9,F63,F7,F82 --show-source --statistics
-    #     flake8 src app tests --count --exit-zero --max-complexity=10 --statistics
+    - name: Lint code (Flake8)
+      continue-on-error: true
+      run: |
+        flake8 src app.py tests --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 src app.py tests --count --exit-zero --max-complexity=10 --statistics
+
 
     # 5. Run Unit Tests
     - name: Run unit tests with coverage
