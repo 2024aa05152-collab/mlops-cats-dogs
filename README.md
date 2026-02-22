@@ -10,7 +10,7 @@ Built for **scalability and reproducibility** using open-source tools. **DagsHub
 
 ## 🏗️ Architecture Overview
 
-
+<img width="2752" height="1536" alt="Architecture" src="https://github.com/user-attachments/assets/f8ebc6e3-3687-4c4b-b060-275a218c08f1" />
 
 Modern **MLOps workflow** across four layers:
 
@@ -21,7 +21,7 @@ graph TD
     C --> D[FastAPI /predict<br/>MLflow Model Load]
     D --> E[Docker → K8s Deploy<br/>GitHub Actions CI/CD]
     E --> F[Minikube Service<br/>Port-forward/Ngrok]
-    F --> G[Prometheus Metrics<br/>Grafana Dashboard]
+    F --> G[Prometheus Metrics<br/>Monitoring Dashboard]
     G --> H[Live Predictions<br/>🐱 Cat / 🐶 Dog]
 ```
 
@@ -235,3 +235,4 @@ python scripts/smoke_test.py  # Health + predict calls
 **Confusion Matrix** & **ROC Curves**: `scripts/performance_graphs/`
 
 ***
+
