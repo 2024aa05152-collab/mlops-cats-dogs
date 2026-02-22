@@ -34,9 +34,9 @@ graph TD
     B --> C[CNN Training<br/>TensorFlow + MLflow]
     C --> D[FastAPI /predict<br/>MLflow Model Load]
     D --> E[Docker → K8s Deploy<br/>GitHub Actions CI/CD]
-    E --> F[Minikube Service<br/>Port-forward/Ngrok]
+    E --> F[Minikube Service<br/>Kubernetes Pod]
     F --> G[Prometheus Metrics<br/>Monitoring Dashboard]
-    G --> H[Live Predictions<br/>🐱 Cat / 🐶 Dog]
+    G --> H[Live Predictions API<br/>🐱 Cat / 🐶 Dog]
 ```
 
 ### 1. **Data & Model Development**
@@ -249,6 +249,7 @@ python scripts/smoke_test.py  # Health + predict calls
 **Confusion Matrix** & **ROC Curves**: `scripts/performance_graphs/`
 
 ***
+
 
 
 
